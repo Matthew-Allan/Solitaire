@@ -27,6 +27,5 @@ void updateViewport(Program *program);
 void setFullscreen(Program *program, int fullscreen);
 void toggleFullscreen(Program *program);
 
-#define windowAspect(program) ((float) ((Program *)(program)->width) / program->height)
-
+#define windowAspect(program) ((float) ((Program *)(program))->width / program->height)
 #endif

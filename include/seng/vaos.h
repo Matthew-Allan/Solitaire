@@ -19,5 +19,6 @@ int loadVAOs(VertexArrObj *station_VAOs, const char **paths, size_t count);
 void drawVAO(const VertexArrObj *VAO);
 void drawVAOInstanced(const VertexArrObj *VAO, size_t count);
 int boxVAO_2D(VertexArrObj *VAO, float width, float height, float bottom, float left, float uv_h, float uv_w);
+void updateVBO(VertexArrObj *VAO, const void *data, size_t size);
 
 #endif

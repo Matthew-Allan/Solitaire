@@ -34,11 +34,10 @@ typedef struct card_data {
 
 int cardVAO(VertexArrObj *card_vao, card_data *data, size_t size) {
     boxVAO_2D(card_vao, (62.f / 98.f), 1, 0, 0, 98, 62);
-    GLuint instanceVBO;
-    glGenBuffers(1, &instanceVBO);
+    glGenBuffers(1, &card_vao->vbo);
     glBindVertexArray(card_vao->id);
 
-    glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, card_vao->vbo);
     glBufferData(GL_ARRAY_BUFFER, size, data, GL_DYNAMIC_DRAW);
 
     glEnableVertexAttribArray(2);
@@ -65,7 +64,7 @@ int runGame(Program *program) {
     for(int i = 0; i < 52; i++) {
         int r = i / 13;
         int c = i % 13;
-        cards[i].card = i % 52;
+        cards[i].card = (i % 52) | 64;
         cards[i].x = (c) * (62.f / 98.f);
         cards[i].y = (r);
     }
@@ -93,7 +92,11 @@ int runGame(Program *program) {
 
         glUseProgram(obj_shad.program);
 
-        uploadCamMat2D(&cam, obj_shad.camera);
+        float height = 1;
+        float width = windowAspect(program) * height;
+        uploadCamMat2D(&cam, obj_shad.camera, width, height);
+
+        updateVBO(&card_vao, cards, sizeof(cards));
 
         glBindTexture(GL_TEXTURE_2D, atlas);
         drawVAOInstanced(&card_vao, 52);

@@ -12,5 +12,5 @@ flat out int card;
 void main() {
     uv = v_uv;
     card = v_card;
-    gl_Position = camera * vec4((v_pos + v_card_pos), float(gl_InstanceID) / 255.0, 1.0);
+    gl_Position = camera * vec4((v_pos + v_card_pos), float(gl_InstanceID) / 255, 1.0);
 }

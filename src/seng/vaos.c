@@ -27,6 +27,12 @@ void setupVAO(VertexArrObj *VAO, const float *verts, size_t verts_size, const GL
     VAO->faces = face_cnt;
 }
 
+void updateVBO(VertexArrObj *VAO, const void *data, size_t size) {
+    glBindVertexArray(VAO->id);
+    glBindBuffer(GL_ARRAY_BUFFER, VAO->vbo);
+    glBufferData(GL_ARRAY_BUFFER, size, data, GL_STATIC_DRAW);
+}
+
 int boxVAO_2D(VertexArrObj *VAO, float width, float height, float bottom, float left, float uv_h, float uv_w) {
     float geom[] = {
         left,         bottom,          0,    uv_h,
