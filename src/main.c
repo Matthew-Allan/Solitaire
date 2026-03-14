@@ -6,9 +6,6 @@
 
 #include "objectshad.h"
 
-int card = 0;
-int suit = 0;
-
 int pollEvents(Program *program) {
     SDL_Event event;
     while(SDL_PollEvent(&event)) {
@@ -24,31 +21,57 @@ int pollEvents(Program *program) {
             if(event.key.keysym.scancode == SDL_SCANCODE_P) {
                 toggleFullscreen(program);
             }
-            if(event.key.keysym.scancode == SDL_SCANCODE_SPACE) {
-                card++;
-                card %= 13;
-            }
-            if(event.key.keysym.scancode == SDL_SCANCODE_RETURN) {
-                suit++;
-                suit %= 4;
-            }
         }
     }
     return 0;
 }
 
+typedef struct card_data {
+    float x;
+    float y;
+    int card;
+} card_data;
+
+int cardVAO(VertexArrObj *card_vao, card_data *data, size_t size) {
+    boxVAO_2D(card_vao, (62.f / 98.f), 1, 0, 0, 98, 62);
+    GLuint instanceVBO;
+    glGenBuffers(1, &instanceVBO);
+    glBindVertexArray(card_vao->id);
+
+    glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
+    glBufferData(GL_ARRAY_BUFFER, size, data, GL_DYNAMIC_DRAW);
+
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(card_data), (void*)0);
+    glVertexAttribDivisor(2, 1);
+
+    glEnableVertexAttribArray(3);
+    glVertexAttribIPointer(3, 1, GL_INT, sizeof(card_data), (void*)(2 * sizeof(float)));
+    glVertexAttribDivisor(3, 1);
+    return 0;
+}
+
 // Run the game and gameloop in the given window.
 int runGame(Program *program) {
-    // Set clear colour to black.
-    glClearColor(0.00, 0.00, 0.00, 1.0f);
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
 
     ObjectShader obj_shad;
     if(buildObjectShader(&obj_shad) < 0) {
         return -1;
     }
 
+    card_data cards[52];
+    for(int i = 0; i < 52; i++) {
+        int r = i / 13;
+        int c = i % 13;
+        cards[i].card = i % 52;
+        cards[i].x = (c) * (62.f / 98.f);
+        cards[i].y = (r);
+    }
+
     VertexArrObj card_vao;
-    boxVAO_2D(&card_vao, (62.f / 98.f) * 2, 2, -1, -1, 98, 62);
+    cardVAO(&card_vao, cards, sizeof(cards));
 
     GLuint atlas; 
     if(loadTex("textures/atlas.png", &atlas, 0, GL_RGBA8UI, GL_RGBA_INTEGER) < 0) {
@@ -61,20 +84,19 @@ int runGame(Program *program) {
     vec3 pos = vec3(0, 0, 0);
     initCam(&cam, pos);
 
-    // float aspect = (float) program->width / program->height;
-
     // Main game loop
     while(program->running) {
         pollEvents(program);
 
         // Clear the screen and draw the grid to the screen.
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         glUseProgram(obj_shad.program);
-        glUniform1i(obj_shad.card, card + (suit * 13));
+
+        uploadCamMat2D(&cam, obj_shad.camera);
 
         glBindTexture(GL_TEXTURE_2D, atlas);
-        drawVAO(&card_vao);
+        drawVAOInstanced(&card_vao, 52);
 
         // Swap the buffers.
         SDL_GL_SwapWindow(program->window);

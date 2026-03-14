@@ -7,6 +7,16 @@ void initCam(Camera *cam, const vec3 pos) {
     initTrans(&cam->trans, pos, NULL);
 }
 
+void uploadCamMat2D(const Camera *cam, GLuint camLoc) {
+    mat4 cam_mat;
+    invTransMat(&cam->trans, cam_mat);
+
+    mat4 projection = orthoMat(0, (62.f / 98.f) * 13, 0, 4, -1, 1);
+    mat4Mlt(projection, cam_mat, cam_mat, 1);
+
+    glUniformMatrix4fv(camLoc, 1, GL_FALSE, marr(cam_mat));
+}
+
 void uploadCamMat(const Camera *cam, GLuint camLoc, float aspect) {
     mat4 cam_mat;
     invTransMat(&cam->trans, cam_mat);

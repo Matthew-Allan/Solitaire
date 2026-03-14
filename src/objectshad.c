@@ -10,6 +10,6 @@ int buildObjectShader(ObjectShader *shader) {
     }
 
     shader->atlas = glGetUniformLocation(shader->program, "atlas");
-    shader->card = glGetUniformLocation(shader->program, "card");
+    shader->camera = glGetUniformLocation(shader->program, "camera");
     return 0;
 }
