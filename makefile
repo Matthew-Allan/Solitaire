@@ -80,15 +80,15 @@ mac-zip: mac-app
 # Create icons from a file named Icon1024.png that is 1024x1024 pixels.
 mac-icns:
 	mkdir $(ICON_SET)
-	sips -z 16 16     $(SOURCE_ICON) --out $(ICON_SET)/icon_16x16.png
-	sips -z 32 32     $(SOURCE_ICON) --out $(ICON_SET)/icon_16x16@2x.png
-	sips -z 32 32     $(SOURCE_ICON) --out $(ICON_SET)/icon_32x32.png
-	sips -z 64 64     $(SOURCE_ICON) --out $(ICON_SET)/icon_32x32@2x.png
-	sips -z 128 128   $(SOURCE_ICON) --out $(ICON_SET)/icon_128x128.png
-	sips -z 256 256   $(SOURCE_ICON) --out $(ICON_SET)/icon_128x128@2x.png
-	sips -z 256 256   $(SOURCE_ICON) --out $(ICON_SET)/icon_256x256.png
-	sips -z 512 512   $(SOURCE_ICON) --out $(ICON_SET)/icon_256x256@2x.png
-	sips -z 512 512   $(SOURCE_ICON) --out $(ICON_SET)/icon_512x512.png
+	sips -z 16 16   $(SOURCE_ICON) --out $(ICON_SET)/icon_16x16.png
+	sips -z 32 32   $(SOURCE_ICON) --out $(ICON_SET)/icon_16x16@2x.png
+	sips -z 32 32   $(SOURCE_ICON) --out $(ICON_SET)/icon_32x32.png
+	sips -z 64 64   $(SOURCE_ICON) --out $(ICON_SET)/icon_32x32@2x.png
+	sips -z 128 128 $(SOURCE_ICON) --out $(ICON_SET)/icon_128x128.png
+	sips -z 256 256 $(SOURCE_ICON) --out $(ICON_SET)/icon_128x128@2x.png
+	sips -z 256 256 $(SOURCE_ICON) --out $(ICON_SET)/icon_256x256.png
+	sips -z 512 512 $(SOURCE_ICON) --out $(ICON_SET)/icon_256x256@2x.png
+	sips -z 512 512 $(SOURCE_ICON) --out $(ICON_SET)/icon_512x512.png
 	cp $(SOURCE_ICON) $(ICON_SET)/icon_512x512@2x.png
 	iconutil -c icns $(ICON_SET) -o $(BUILD_RES)/$(ICON)
 	rm -r $(ICON_SET)
