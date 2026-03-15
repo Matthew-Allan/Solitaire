@@ -7,6 +7,7 @@ typedef struct ObjectShader {
     GLuint program;
     GLuint atlas;
     GLuint camera;
+    GLuint selected;
 } ObjectShader;
 
 #define FRAG_SHADER_PATH "shaders/frag.glsl"

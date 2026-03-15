@@ -3,11 +3,15 @@
 #include <seng/camera.h>
 #include <seng/vaos.h>
 #include <seng/textures.h>
+#include <seng/quaternion.h>
 
 #include <stdlib.h>
 #include <time.h>
 
 #include "objectshad.h"
+
+#define CARD_WIDTH (62.f / 98.f)
+#define CARD_HEIGHT 1
 
 int pollEvents(Program *program) {
     SDL_Event event;
@@ -43,12 +47,13 @@ typedef struct CardStack {
 
 typedef struct Board {
     CardStack stacks[7];
+    uint8_t selected_card;
     uint8_t cards_left;
     uint8_t order[52];
 } Board;
 
 int cardVAO(VertexArrObj *card_vao) {
-    boxVAO_2D(card_vao, (62.f / 98.f), 1, 0, 0, 98, 62);
+    boxVAO_2D(card_vao, CARD_WIDTH, CARD_HEIGHT, 0, 0, 98, 62);
     glGenBuffers(1, &card_vao->vbo);
     glBindVertexArray(card_vao->id);
 
@@ -84,6 +89,10 @@ void exposeCard(CardStack *stack, Board *board) {
     stack->upside_down--;
     stack->cards[0] = getCard(board);
     stack->card_count = 1;
+    for(int j = 0; j < 3; j++) {
+        stack->cards[stack->card_count] = getCard(board);
+        stack->card_count++;
+    }
 }
 
 void resetBoard(Board *board) {
@@ -95,6 +104,7 @@ void resetBoard(Board *board) {
         board->stacks[i].upside_down = i + 1;
         exposeCard(&board->stacks[i], board);
     }
+    board->selected_card = -1;
 }
 
 void addCard(Card *cards, uint8_t *count, int card, float x, float y) {
@@ -105,25 +115,19 @@ void addCard(Card *cards, uint8_t *count, int card, float x, float y) {
     (*count)++;
 }
 
-void drawBoard(Board *board, VertexArrObj *vao, GLuint atlas) {
-    Card cards[52];
-
-    uint8_t count = 0;
+void updateCards(Board *board, Card *cards, uint8_t *count) {
+    *count = 0;
     for(int s = 0; s < 7; s++) {
+        CardStack *stack = &board->stacks[s];
         float x = 0.25 + (s * 0.6875);
-        float y = 3.5;
-        for(int b = 0; b < board->stacks[s].upside_down; b++, y -= 0.25) {
-            addCard(cards, &count, 64, x, y);
+        float y = 3.5 - 0.25 * (stack->card_count + stack->upside_down);
+        for(int c = stack->card_count - 1; c >= 0; c--, y += 0.25) {
+            addCard(cards, count, stack->cards[c], x, y);
         }
-        for(int c = 0; c < board->stacks[s].card_count; c++, y -= 0.25) {
-            addCard(cards, &count, board->stacks[s].cards[c], x, y);
+        for(int b = 0; b < stack->upside_down; b++, y += 0.25) {
+            addCard(cards, count, 64, x, y);
         }
     }
-    
-    updateVBO(vao, cards, sizeof(cards));
-
-    glBindTexture(GL_TEXTURE_2D, atlas);
-    drawVAOInstanced(vao, count);
 }
 
 // Run the game and gameloop in the given window.
@@ -149,25 +153,52 @@ int runGame(Program *program) {
     Camera cam;
     vec3 pos = vec3(0, 0, 0);
     initCam(&cam, pos);
+    quatFromEuler(cam.trans.orientation, 0, 0, 0);
 
     Board board;
-
     resetBoard(&board);
+        
+    Card cards[52];
+    uint8_t count = 0;
 
     // Main game loop
     while(program->running) {
         pollEvents(program);
 
-        // Clear the screen and draw the grid to the screen.
+        updateCards(&board, cards, &count);
+        float height = 5;
+        float width = windowAspect(program) * height;
+
+        int x, y;
+        SDL_GetMouseState(&x, &y);
+        float w_x = x, w_y = y;
+        screenToWorld(&cam, &w_x, &w_y, width, height, program->width / 2, program->height / 2);
+
+        board.selected_card = -1;
+        for(int i = 0; i < count; i++) {
+            Card *c = &cards[i];
+            if(
+                w_x >= c->x &&
+                w_y >= c->y &&
+                w_x <= c->x + CARD_WIDTH &&
+                w_y <= c->y + CARD_HEIGHT
+            ) {
+                board.selected_card = i;
+                break;
+            }
+        }
+
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         glUseProgram(obj_shad.program);
 
-        float height = 5;
-        float width = windowAspect(program) * height;
         uploadCamMat2D(&cam, obj_shad.camera, width, height);
-        
-        drawBoard(&board, &card_vao, atlas);
+
+        glUniform1i(obj_shad.selected, board.selected_card);
+        updateVBO(&card_vao, cards, sizeof(cards));
+
+        glBindTexture(GL_TEXTURE_2D, atlas);
+        drawVAOInstanced(&card_vao, count);
 
         // Swap the buffers.
         SDL_GL_SwapWindow(program->window);

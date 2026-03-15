@@ -1,6 +1,7 @@
 #version 330 core
 in vec2 uv;
 flat in int card;
+flat in int is_selected;
 
 uniform usampler2D atlas;
 
@@ -93,7 +94,7 @@ void main() {
             break;
         case 128u:
             col = content(ivec2(vals), suit, value);
-            return;
+            break;
         case 64u:
             col = vec4(texelFetch(atlas, ivec2(vals) + ivec2((coll * 9), 98 + (row * 10)), 0)) / 255;
             break;
@@ -109,4 +110,5 @@ void main() {
     } else if (col.r == 1) {
         col = suit_cols[int(suit > 1)];
     }
+    col = mix(col, vec4(1), float(is_selected) * 0.3);
 }

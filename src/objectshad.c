@@ -11,5 +11,6 @@ int buildObjectShader(ObjectShader *shader) {
 
     shader->atlas = glGetUniformLocation(shader->program, "atlas");
     shader->camera = glGetUniformLocation(shader->program, "camera");
+    shader->selected = glGetUniformLocation(shader->program, "selected");
     return 0;
 }
