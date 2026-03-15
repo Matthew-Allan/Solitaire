@@ -66,9 +66,9 @@ void mat3Mlt(const mat3 mat_a, const mat3 mat_b, mat3 out, size_t count) { matmn
 void mat4Mlt(const mat4 mat_a, const mat4 mat_b, mat4 out, size_t count) { matmnMltMatnp(marr(mat_a), marr(mat_b), marr(out), 4, 4, 4, count); }
 
 #define matnMltVecBdy(mat, vec, out, n, count) \
-    vec3 temp; \
+    vec ## n temp; \
     for(size_t c = 0; c < count; c++, vec += n, out += n) { \
-        cpyVec3(vec, temp); \
+        cpyVec ## n(vec, temp); \
         for(int i = 0; i < n; i++) { \
             out[i] = 0; \
             for(int j = 0; j < n; j++) { \
