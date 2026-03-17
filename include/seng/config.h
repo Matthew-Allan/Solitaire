@@ -3,7 +3,7 @@
 
 #define PROGRAM_NAME "Solitaire"
 
-#define SCREEN_WIDTH 600    // Width of the screen in window points (not in pixels).
+#define SCREEN_WIDTH 1000    // Width of the screen in window points (not in pixels).
 #define SCREEN_HEIGHT 600   // Height of the screen in window points (not in pixels).
 
 #define GL_MAJOR_VER 3  // The OpenGL major version number to target.

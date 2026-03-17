@@ -98,6 +98,15 @@ void mat2Transpose(const mat2 mat, mat2 out, size_t count) { matnTransposeBdy(ma
 void mat3Transpose(const mat3 mat, mat3 out, size_t count) { matnTransposeBdy(mat, out, 3, count) }
 void mat4Transpose(const mat4 mat, mat4 out, size_t count) { matnTransposeBdy(mat, out, 4, count) }
 
+#define cpyMatxBdy(x, src, dst) \
+    for(int i = 0; i < x * x; i++) { \
+        marr(dst)[i] = marr(src)[i]; \
+    }
+
+void cpyMat2(const mat2 src, mat2 dst) { cpyMatxBdy(2, src, dst) }
+void cpyMat3(const mat3 src, mat3 dst) { cpyMatxBdy(3, src, dst) }
+void cpyMat4(const mat4 src, mat4 dst) { cpyMatxBdy(4, src, dst) }
+
 void printMatmn(const float *mat, size_t m, size_t n, size_t count) {
     for(size_t c = 0; c < count; c++, mat += m * n) {
         for(size_t i = 0; i < m; i++) {

@@ -95,6 +95,17 @@ void vec2Norm(const vec2 vec, vec2 out) { vecxNormBdy(2, vec, out) }
 void vec3Norm(const vec3 vec, vec3 out) { vecxNormBdy(3, vec, out) }
 void vec4Norm(const vec4 vec, vec4 out) { vecxNormBdy(4, vec, out) }
 
+void homoVecNorm(const vec4 vec, vec4 out) {
+    if(vec[vecW] == 0) {
+        setVec4(out, 0, 0, 0, 1);
+        return;
+    }
+    out[vecX] = vec[vecX] / vec[vecW];
+    out[vecY] = vec[vecY] / vec[vecW];
+    out[vecZ] = vec[vecZ] / vec[vecW];
+    out[vecW] = 1;
+}
+
 void setVec2(vec2 vec, float x, float y) {
     vec[vecX] = x;
     vec[vecY] = y;

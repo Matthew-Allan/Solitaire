@@ -65,6 +65,8 @@ void vec2Div(const vec2 vec_a, const vec2 vec_b, vec2 out, size_t count);
 void vec3Div(const vec3 vec_a, const vec3 vec_b, vec3 out, size_t count);
 void vec4Div(const vec4 vec_a, const vec4 vec_b, vec4 out, size_t count);
 
+void homoVecNorm(const vec4 vec, vec4 out);
+
 float vec2Dot(const vec2 vec_a, const vec2 vec_b);
 float vec3Dot(const vec3 vec_a, const vec3 vec_b);
 float vec4Dot(const vec4 vec_a, const vec4 vec_b);

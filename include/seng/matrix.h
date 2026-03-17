@@ -47,21 +47,34 @@ typedef matmn(4, 4, mat4);
     vec4(0, 0, 0, 1) \
 )
 
-#define orthoMatSp(a, b) (2.f / (a - b))
-#define orthoMatTp(a, b) (((float) (a + b)) / (b - a))
+#define orthMatTp(a, b) (((float) ((a) + (b))) / ((b) - (a)))
 
 #define orthoMat(left, right, bottom, top, near, far) mat4( \
-    vec4(orthoMatSp(right, left), 0, 0, 0), \
-    vec4(0, orthoMatSp(top, bottom), 0, 0), \
-    vec4(0, 0, orthoMatSp(near, far), 0), \
-    vec4(orthoMatTp(right, left), orthoMatTp(top, bottom), orthoMatTp(far, near), 1) \
+    vec4(2.f / ((right) - (left)), 0, 0, 0), \
+    vec4(0, 2.f / ((top) - (bottom)), 0, 0), \
+    vec4(0, 0, 2.f / ((near) - (far)), 0), \
+    vec4(orthMatTp(right, left), orthMatTp(top, bottom), orthMatTp(far, near), 1) \
+)
+
+#define invOrthoMat(left, right, bottom, top, near, far) mat4( \
+    vec4(((right) - (left)) / 2.0, 0, 0, 0), \
+    vec4(0, ((top) - (bottom)) / 2.0, 0, 0), \
+    vec4(0, 0, ((far) - (near)) / 2.0, 0), \
+    vec4(((right) + (left)) / 2.0, ((top) + (bottom)) / 2.0, ((far) + (near)) / 2.0, 1) \
 )
 
 #define perspMat(fov, aspect, near, far) mat4( \
-    vec4(1.f / (aspect * tanf(fov / 2.f)), 0, 0, 0), \
-    vec4(0, 1.f / tanf(fov / 2.f), 0, 0), \
-    vec4(0, 0, -(far + near) / (float) (far - near), -1.f), \
-    vec4(0, 0, -(2.f * far * near) / (far - near), 0) \
+    vec4(1.f / ((aspect) * tanf((fov) / 2.f)), 0, 0, 0), \
+    vec4(0, 1.f / tanf((fov) / 2.f), 0, 0), \
+    vec4(0, 0, -((far) + (near)) / (float) ((far) - (near)), -1.f), \
+    vec4(0, 0, -(2.f * (far) * (near)) / ((far) - (near)), 0) \
+)
+
+#define invPerspMat(fov, aspect, near, far) mat4( \
+    vec4((aspect) * tanf((fov) / 2.f), 0, 0, 0), \
+    vec4(0, tanf((fov) / 2.f), 0, 0), \
+    vec4(0, 0, 0, -((far) - (near)) / (2.f * (far) * (near))), \
+    vec4(0, 0, -1.f, ((far) + (near)) / (2.f * (far) * (near))) \
 )
 
 #define marr(mat) ((float *) (mat))
@@ -112,6 +125,10 @@ void mat4MltVec(const mat4 mat, const vec4 vec, vec4 out, size_t count);
 void mat2Transpose(const mat2 mat, mat2 out, size_t count);
 void mat3Transpose(const mat3 mat, mat3 out, size_t count);
 void mat4Transpose(const mat4 mat, mat4 out, size_t count);
+
+void cpyMat2(const mat2 src, mat2 dst);
+void cpyMat3(const mat3 src, mat3 dst);
+void cpyMat4(const mat4 src, mat4 dst);
 
 void printMat2(const mat2 mat, size_t count);
 void printMat3(const mat3 mat, size_t count);

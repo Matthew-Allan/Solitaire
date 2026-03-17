@@ -14,6 +14,7 @@ typedef struct Program {
     uint64_t prev_time;
     uint64_t delta_time;
     float frames;
+    float aspect;
     int width;
     int height;
     int running : 1;
@@ -23,9 +24,9 @@ typedef struct Program {
 SDL_Window *createWindow();
 int createProgram(Program *program);
 void waitForFrame(Program *program);
-void updateViewport(Program *program);
+void updateWinDims(Program *program);
+void getMouseNDC(Program *program, float *ndc_x, float *ndc_y);
 void setFullscreen(Program *program, int fullscreen);
 void toggleFullscreen(Program *program);
 
-#define windowAspect(program) ((float) ((Program *)(program))->width / program->height)
 #endif

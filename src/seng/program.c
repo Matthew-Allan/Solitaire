@@ -52,9 +52,18 @@ SDL_Window *createWindow() {
     return window;
 }
 
-void updateViewport(Program *program) {
+void updateWinDims(Program *program) {
     SDL_GetWindowSizeInPixels(program->window, &program->width, &program->height);
     glViewport(0, 0, program->width, program->height);
+    program->aspect = (float) program->width / program->height;
+}
+
+void getMouseNDC(Program *program, float *ndc_x, float *ndc_y) {
+    int x, y;
+    SDL_GetMouseState(&x, &y);
+
+    *ndc_x = (4.0f * x) / program->width - 1.0f;
+    *ndc_y = 1.0f - (4.0f * y) / program->height;
 }
 
 int createProgram(Program *program) {
@@ -62,7 +71,7 @@ int createProgram(Program *program) {
     if(program->window == NULL) {
         return -1;
     }
-    updateViewport(program);
+    updateWinDims(program);
     program->running = 1;
     program->delta_time = 0;
     program->prev_time = SDL_GetTicks64();

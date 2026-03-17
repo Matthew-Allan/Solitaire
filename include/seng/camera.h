@@ -9,12 +9,17 @@
 
 typedef struct Camera {
     Transform trans;
-    float fov;
+    mat4 proj;
+    mat4 inv_proj;
 } Camera;
 
-void initCam(Camera *cam, const vec3 pos);
+void uploadCamMat(const Camera *cam, GLuint camLoc);
+void screenToWorld(const Camera *cam, float *x, float *y);
 
-void uploadCamMat(const Camera *cam, GLuint camLoc, float aspect);
-void uploadCamMat2D(const Camera *cam, GLuint camLoc, float width, float height);
-void screenToWorld(const Camera *cam, float *x, float *y, float width, float height, float s_width, float s_height);
+void updatePersp(Camera *cam, float aspect, float fov);
+void updateOrtho(Camera *cam, float width, float height);
+
+void initOrthoCam(Camera *cam, const vec3 pos, float width, float height);
+void initPerspCam(Camera *cam, const vec3 pos, float aspect, float fov);
+
 #endif
