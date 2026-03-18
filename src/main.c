@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include <time.h>
 
-#include "objectshad.h"
+#include "cardshader.h"
 
 #define MAX_CARDS 128
 #define MAX_CARD_STACK 13
