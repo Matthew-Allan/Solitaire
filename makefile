@@ -63,6 +63,8 @@ mac-app: unity $(PROG_LOC)
 	mkdir $(APP_FRAMEWORKS)
 # Place files in the package.
 	cp $(BUILD_RES)/libSDL2-2.0.0.dylib $(APP_FRAMEWORKS)/libSDL2-2.0.0.dylib
+	cp $(BUILD_RES)/libSDL2_image-2.0.0.dylib $(APP_FRAMEWORKS)/libSDL2_image-2.0.0.dylib
+	cp $(BUILD_RES)/libpng16.16.dylib $(APP_FRAMEWORKS)/libpng16.16.dylib
 	cp $(BUILD_RES)/Info.plist $(APP_CONTENTS)/Info.plist
 	sed $(SUBS) $(BUILD_RES)/Info.plist > $(APP_CONTENTS)/Info.plist
 	cp $(BUILD_RES)/Icon.icns $(APP_RESOURCES)/$(ICON)
@@ -72,6 +74,8 @@ mac-app: unity $(PROG_LOC)
 # Set the program to look in the apps frameworks instead of the pcs frameworks.
 # Probably weird and not suggested :/. Only an issue if it doesn't work on another computer.
 	install_name_tool -change $(shell brew --prefix sdl2)/lib/libSDL2-2.0.0.dylib @executable_path/../Frameworks/libSDL2-2.0.0.dylib $(APP_MAC_OS)/$(PROG_NAME)
+	install_name_tool -change $(shell brew --prefix sdl2_image)/lib/libSDL2_image-2.0.0.dylib @executable_path/../Frameworks/libSDL2_image-2.0.0.dylib $(APP_MAC_OS)/$(PROG_NAME)
+	install_name_tool -change $(shell brew --prefix libpng)/lib/libpng16.16.dylib @executable_path/../Frameworks/libpng16.16.dylib $(APP_MAC_OS)/$(PROG_NAME)
 
 # Create and zip a .app package.
 mac-zip: mac-app
