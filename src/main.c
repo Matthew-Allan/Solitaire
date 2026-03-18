@@ -27,7 +27,7 @@
 #define DRAW_CARDS (CARD_TYPES - STACK_CARDS)
 
 #define CARD_W ((float) CARD_PIXEL_W / CARD_PIXEL_H)
-#define CARD_H 1
+#define CARD_H 1.f
 
 #define MARGIN 0.125
 #define COL_OFF 0.6875
@@ -90,6 +90,10 @@ typedef struct DrawStack {
 typedef struct Board {
     float hand_off_x;
     float hand_off_y;
+    float mouse_wspc_x;
+    float mouse_wspc_y;
+    float hovered_x;
+    float hovered_y;
     AceStack aces[ACES];
     CardStack stacks[STACKS];
     CardStack hand;
@@ -235,10 +239,12 @@ void addStack(Board *board, CardStack *stack, float x, float y, Card *cards, uin
     }
 }
 
-void updateCards(Board *board, float mouse_x, float mouse_y, Card *cards, uint8_t *count) {
+void updateCards(Board *board, Card *cards, uint8_t *count) {
     *count = 0;
     board->highlighted = -1;
-    addStack(board, &board->hand, mouse_x, mouse_y, cards, count);
+    float hand_x = board->mouse_wspc_x + board->hand_off_x;
+    float hand_y = board->mouse_wspc_y + board->hand_off_y;
+    addStack(board, &board->hand, hand_x, hand_y, cards, count);
     for(int s = 0; s < STACKS; s++) {
         CardStack *stack = &board->stacks[s];
         if(IS_SELECTED(board->hovered, s, TYPE_STACK) && stack->card_count > 0) {
@@ -273,8 +279,18 @@ void updateCards(Board *board, float mouse_x, float mouse_y, Card *cards, uint8_
     }
 }
 
-void checkHovered(Board *board, float x, float y) {
+void checkHovered(Board *board) {
     board->hovered = UNSELECTED;
+    board->hovered_x = 0;
+    board->hovered_y = 0;
+
+    float x = board->mouse_wspc_x;
+    float y = board->mouse_wspc_y;
+    if(board->hand.card_count > 0) {
+        x += board->hand_off_x + (CARD_W / 2);
+        y += board->hand_off_y + (CARD_H / 2) + (STACK_OFF * (board->hand.card_count - 1));
+    }
+    
     CardStack *cards = board->stacks;
     for(int s = 0; s < STACKS; s++, cards++) {
         int stack_size = cards->card_count + cards->upside_down;
@@ -286,6 +302,8 @@ void checkHovered(Board *board, float x, float y) {
                 board->stack_row = ROWS_PER_CARD;
             }
             board->stack_row -= ROWS_PER_CARD;
+            board->hovered_x = stack_x;
+            board->hovered_y = stack_y;
             return;
         }
     }
@@ -294,6 +312,8 @@ void checkHovered(Board *board, float x, float y) {
         float ace_x = ACE_X(a), ace_y = ACE_Y;
         if(IN_BOX(x, y, ace_x, ace_y, ACE_W, ACE_H)) {
             board->hovered = a | TYPE_ACE;
+            board->hovered_x = ace_x;
+            board->hovered_y = ace_y;
             return;
         }
     }
@@ -307,11 +327,16 @@ void checkHovered(Board *board, float x, float y) {
         float draw_x = DRAW_X(0, board->draw.revealed), draw_y = DRAW_Y;
         if(IN_BOX(x, y, draw_x, draw_y, DRAW_W, DRAW_H)) {
             board->hovered = TYPE_DRAW;
+            board->hovered_x = draw_x;
+            board->hovered_y = draw_y;
+            return;
         }
     }
 }
 
 void pickUp(Board *board) {
+    board->hand_off_x = board->hovered_x - board->mouse_wspc_x;
+    board->hand_off_y = board->hovered_y - board->mouse_wspc_y;
     switch (TYPE(board->hovered)) {
     case TYPE_STACK: {
         CardStack *cards = &board->stacks[INDEX(board->hovered)];
@@ -499,12 +524,11 @@ int runGame(Program *program) {
     while(program->running) {
         pollEvents(program, &board, &cam);
 
-        float x, y;
-        getMouseNDC(program, &x, &y);
-        screenToWorld(&cam, &x, &y);
+        getMouseNDC(program, &board.mouse_wspc_x, &board.mouse_wspc_y);
+        screenToWorld(&cam, &board.mouse_wspc_x, &board.mouse_wspc_y);
 
-        checkHovered(&board, x, y);
-        updateCards(&board, x, y, cards, &count);
+        checkHovered(&board);
+        updateCards(&board, cards, &count);
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glUseProgram(obj_shad.program);
