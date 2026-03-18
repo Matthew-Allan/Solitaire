@@ -424,6 +424,8 @@ int pollEvents(Program *program, Board *board, Camera *cam) {
         case SDL_KEYDOWN:
             if(event.key.keysym.scancode == SDL_SCANCODE_P) {
                 toggleFullscreen(program);
+            } else if (event.key.keysym.scancode == SDL_SCANCODE_R) {
+                resetBoard(board);
             }
             break;
         case SDL_MOUSEBUTTONDOWN:
