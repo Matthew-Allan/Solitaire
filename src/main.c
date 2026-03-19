@@ -31,10 +31,14 @@ int pollEvents(Program *program, Board *board, Camera *cam) {
         case SDL_MOUSEBUTTONDOWN:
             if(event.button.button == SDL_BUTTON_LEFT) {
                 pickUp(board);
+                if(board->hand.card_count > 0) {
+                    SDL_ShowCursor(SDL_DISABLE);
+                }
             }
             break;
         case SDL_MOUSEBUTTONUP:
             if(event.button.button == SDL_BUTTON_LEFT) {
+                SDL_ShowCursor(SDL_ENABLE);
                 putDown(board);
             }
             break;

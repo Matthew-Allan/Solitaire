@@ -237,21 +237,23 @@ void putDown(Board *board) {
     }
     returnHand(board);
 }
+
+void animate(uint8_t p, CardAnim *anim, float e_x, float e_y, float *x, float *y) {
+    float div = 1 + expf(-0.04 * ((float)p - 128));
+    *x = (e_x - anim->start_x) / div + anim->start_x;
+    *y = (e_y - anim->start_y) / div + anim->start_y;
+}
+
 void addAceAnim(Board *board, uint8_t stack, Card *cards, uint8_t *count) {
     AceStack *ace = &board->aces[stack];
     if(ace->progression == 255) {
         return;
     }
-    float div = 1 + expf(-0.04 * ((float)ace->progression - 128));
-
-    float x = ACE_X(stack);
-    float y = ACE_Y;
-
     CardAnim *anim = &board->ace_anims[stack];
-    float anim_x = (x - anim->start_x) / div + anim->start_x;
-    float anim_y = (y - anim->start_y) / div + anim->start_y;
+    float x, y;
+    animate(ace->progression, anim, ACE_X(stack), ACE_Y, &x, &y);
     
-    addCardData(cards, count, ace->count - 1 + (ace->suit * 13), anim_x, anim_y);
+    addCardData(cards, count, ace->count - 1 + (ace->suit * 13), x, y);
 }
 
 void addStackAnim(Board *board, uint8_t stack, Card *cards, uint8_t *count) {
@@ -259,17 +261,12 @@ void addStackAnim(Board *board, uint8_t stack, Card *cards, uint8_t *count) {
     if(card_stack->moving == 0) {
         return;
     }
-    float div = 1 + expf(-0.04 * ((float)card_stack->progression - 128));
-
-    float x = STACK_X(stack);
-    float y = STACK_Y(card_stack->card_count + card_stack->upside_down);
-
     CardAnim *anim = &board->stack_anims[stack];
-    float anim_x = (x - anim->start_x) / div + anim->start_x;
-    float anim_y = (y - anim->start_y) / div + anim->start_y;
-    
-    for(int c = card_stack->card_count - 1; c >= card_stack->card_count - card_stack->moving; c--, anim_y += STACK_OFF) {
-        addCardData(cards, count, card_stack->cards[c], anim_x, anim_y);
+    float x, y;
+    animate(card_stack->progression, anim, STACK_X(stack), STACK_Y(card_stack->card_count + card_stack->upside_down), &x, &y);
+
+    for(int c = card_stack->card_count - 1; c >= card_stack->card_count - card_stack->moving; c--, y += STACK_OFF) {
+        addCardData(cards, count, card_stack->cards[c], x, y);
     }
 }
 
