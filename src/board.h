@@ -22,8 +22,7 @@
 #define CARD_PIXEL_W 62
 #define CARD_PIXEL_H 98
 
-#define MAX_ANIMS 4
-#define ANIM_SPEED 0.5
+#define ANIM_SPEED 16
 
 #define STACK_CARDS ((STACKS * (STACKS + 1)) / 2)
 #define DRAW_CARDS (CARD_TYPES - STACK_CARDS)
@@ -47,6 +46,9 @@
 #define IS_INDEX(field, index) (INDEX(field) == (index))
 #define IS_SELECTED(field, index, type) (((index) | (type)) == (field))
 
+typedef uint8_t card;
+typedef uint8_t cardloc;
+
 typedef struct Card {
     float x;
     float y;
@@ -58,7 +60,7 @@ typedef struct CardStack {
     uint8_t card_count;
     uint8_t moving;
     uint8_t progression;
-    uint8_t cards[MAX_CARD_STACK];
+    card cards[MAX_CARD_STACK];
 } CardStack;
 
 typedef struct AceStack {
@@ -71,7 +73,8 @@ typedef struct DrawStack {
     uint8_t from;
     uint8_t revealed;
     uint8_t size;
-    uint8_t pile[DRAW_CARDS];
+    uint8_t progression;
+    card pile[DRAW_CARDS];
 } DrawStack;
 
 typedef struct CardAnim {
@@ -86,25 +89,26 @@ typedef struct Board {
     float mouse_wspc_y;
     float hovered_x;
     float hovered_y;
+    CardAnim draw_anim;
     CardAnim stack_anims[STACKS];
     CardAnim ace_anims[ACES];
     CardStack stacks[STACKS];
     AceStack aces[ACES];
     CardStack hand;
     DrawStack draw;
-    uint8_t active_draw;
-    uint8_t return_to;
-    uint8_t hovered;
+    cardloc return_to;
+    cardloc hovered;
     uint8_t stack_row;
     uint8_t highlighted;
     uint8_t cards_left;
-    uint8_t order[CARD_TYPES];
+    card order[CARD_TYPES];
 } Board;
 
 void resetBoard(Board *board);
 
 void checkHovered(Board *board);
 void updateCards(Board *board, Card *cards, uint8_t *count);
+void updateAnims(Board *board);
 
 void pickUp(Board *board);
 void putDown(Board *board);

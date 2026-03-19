@@ -103,6 +103,7 @@ int runGame(Program *program) {
         screenToWorld(&cam, &board.mouse_wspc_x, &board.mouse_wspc_y);
 
         checkHovered(&board);
+        updateAnims(&board);
         updateCards(&board, cards, &count);
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
