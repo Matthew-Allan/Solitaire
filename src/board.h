@@ -56,12 +56,15 @@ typedef struct Card {
 typedef struct CardStack {
     uint8_t upside_down;
     uint8_t card_count;
+    uint8_t moving;
+    uint8_t progression;
     uint8_t cards[MAX_CARD_STACK];
 } CardStack;
 
 typedef struct AceStack {
     uint8_t suit;
     uint8_t count;
+    uint8_t progression;
 } AceStack;
 
 typedef struct DrawStack {
@@ -74,8 +77,6 @@ typedef struct DrawStack {
 typedef struct CardAnim {
     float start_x;
     float start_y;
-    float percent;
-    uint8_t destination;
 } CardAnim;
 
 typedef struct Board {
@@ -85,12 +86,10 @@ typedef struct Board {
     float mouse_wspc_y;
     float hovered_x;
     float hovered_y;
-    CardAnim anims[MAX_ANIMS];
-    CardStack animated_stacks[MAX_ANIMS];
-    uint8_t active_anims;
-    uint8_t anim_start;
-    AceStack aces[ACES];
+    CardAnim stack_anims[STACKS];
+    CardAnim ace_anims[ACES];
     CardStack stacks[STACKS];
+    AceStack aces[ACES];
     CardStack hand;
     DrawStack draw;
     uint8_t active_draw;

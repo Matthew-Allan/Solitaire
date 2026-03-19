@@ -114,15 +114,6 @@ void addCardData(Card *cards, uint8_t *count, int card, float x, float y) {
     (*count)++;
 }
 
-void addStack(Board *board, CardStack *stack, float x, float y, Card *cards, uint8_t *count) {
-    for(int c = stack->card_count - 1; c >= 0; c--, y += STACK_OFF) {
-        addCardData(cards, count, stack->cards[c], x, y);
-    }
-    for(int b = 0; b < stack->upside_down; b++, y += STACK_OFF) {
-        addCardData(cards, count, 64, x, y);
-    }
-}
-
 void pickUp(Board *board) {
     if(IS_SELECTED(board->hovered, 1, TYPE_DRAW)) {
         flip(&board->draw);
@@ -133,6 +124,7 @@ void pickUp(Board *board) {
     switch (TYPE(board->hovered)) {
     case TYPE_STACK: {
         CardStack *cards = &board->stacks[INDEX(board->hovered)];
+        cards->moving = 0;
         if(cards->card_count > board->stack_row) {
             moveCards(cards, &board->hand, cards->card_count - board->stack_row - 1);
         }
@@ -161,6 +153,11 @@ void returnHand(Board *board) {
     switch (TYPE(board->return_to)) {
     case TYPE_STACK: {
         CardStack *cards = &board->stacks[INDEX(board->return_to)];
+        CardAnim *card_anim = &board->stack_anims[INDEX(board->return_to)];
+        cards->moving = board->hand.card_count;
+        cards->progression = 0;
+        card_anim->start_x = board->mouse_wspc_x + board->hand_off_x;
+        card_anim->start_y = board->mouse_wspc_y + board->hand_off_y;
         moveCards(&board->hand, cards, 0);
         if(cards->card_count == 0) {
             exposeCard(cards, board);
@@ -168,13 +165,19 @@ void returnHand(Board *board) {
         break;
     }
     
-    case TYPE_ACE:
+    case TYPE_ACE: {
         if(board->hand.card_count == 1) {
-            board->aces[INDEX(board->return_to)].count++;
+            AceStack *ace = &board->aces[INDEX(board->return_to)];
+            CardAnim *card_anim = &board->ace_anims[INDEX(board->return_to)];
+            ace->progression = 0;
+            card_anim->start_x = board->mouse_wspc_x + board->hand_off_x;
+            card_anim->start_y = board->mouse_wspc_y + board->hand_off_y;
+            ace->count++;
             board->hand.card_count = 0;
         }
-        break;
-    
+        break;   
+    }
+
     case TYPE_DRAW:
         if(board->hand.card_count == 1) {
             unpick(&board->draw);
@@ -203,11 +206,16 @@ void putDown(Board *board) {
         if(hand->card_count == 1 && value == aces->count && aces->suit == suit) {
             aces->count++;
             hand->card_count = 0;
+            CardAnim *card_anim = &board->ace_anims[INDEX(board->hovered)];
+            aces->progression = 0;
+            card_anim->start_x = board->mouse_wspc_x + board->hand_off_x;
+            card_anim->start_y = board->mouse_wspc_y + board->hand_off_y;
         }
         break;
     }
     case TYPE_STACK: {
         CardStack *cards = &board->stacks[INDEX(board->hovered)];
+        CardAnim *card_anim = &board->stack_anims[INDEX(board->hovered)];
         uint8_t allowed;
         if(cards->card_count > 0) {
             uint8_t bottom = cards->cards[cards->card_count - 1];
@@ -216,6 +224,10 @@ void putDown(Board *board) {
             allowed = value == 12;
         }
         if(allowed) {
+            cards->moving = hand->card_count;
+            cards->progression = 0;
+            card_anim->start_x = board->mouse_wspc_x + board->hand_off_x;
+            card_anim->start_y = board->mouse_wspc_y + board->hand_off_y;
             moveCards(hand, cards, 0);
         }
         break;
@@ -225,7 +237,51 @@ void putDown(Board *board) {
     }
     returnHand(board);
 }
+void addAceAnim(Board *board, uint8_t stack, Card *cards, uint8_t *count) {
+    AceStack *ace = &board->aces[stack];
+    if(ace->progression == 255) {
+        return;
+    }
+    float div = 1 + expf(-0.04 * ((float)ace->progression - 128));
 
+    float x = ACE_X(stack);
+    float y = ACE_Y;
+
+    CardAnim *anim = &board->ace_anims[stack];
+    float anim_x = (x - anim->start_x) / div + anim->start_x;
+    float anim_y = (y - anim->start_y) / div + anim->start_y;
+    
+    addCardData(cards, count, ace->count - 1 + (ace->suit * 13), anim_x, anim_y);
+}
+
+void addStackAnim(Board *board, uint8_t stack, Card *cards, uint8_t *count) {
+    CardStack *card_stack = &board->stacks[stack];
+    if(card_stack->moving == 0) {
+        return;
+    }
+    float div = 1 + expf(-0.04 * ((float)card_stack->progression - 128));
+
+    float x = STACK_X(stack);
+    float y = STACK_Y(card_stack->card_count + card_stack->upside_down);
+
+    CardAnim *anim = &board->stack_anims[stack];
+    float anim_x = (x - anim->start_x) / div + anim->start_x;
+    float anim_y = (y - anim->start_y) / div + anim->start_y;
+    
+    for(int c = card_stack->card_count - 1; c >= card_stack->card_count - card_stack->moving; c--, anim_y += STACK_OFF) {
+        addCardData(cards, count, card_stack->cards[c], anim_x, anim_y);
+    }
+}
+
+void addStack(Board *board, CardStack *stack, float x, float y, Card *cards, uint8_t *count) {
+    for(int c = stack->card_count - stack->moving - 1; c >= 0; c--, y += STACK_OFF) {
+        addCardData(cards, count, stack->cards[c], x, y);
+    }
+    for(int b = 0; b < stack->upside_down; b++, y += STACK_OFF) {
+        addCardData(cards, count, 64, x, y);
+    }
+}
+#include <stdio.h>
 void updateCards(Board *board, Card *cards, uint8_t *count) {
     *count = 0;
     board->highlighted = -1;
@@ -233,23 +289,42 @@ void updateCards(Board *board, Card *cards, uint8_t *count) {
     float hand_y = board->mouse_wspc_y + board->hand_off_y;
     addStack(board, &board->hand, hand_x, hand_y, cards, count);
     for(int s = 0; s < STACKS; s++) {
+        addStackAnim(board, s, cards, count);
+    }
+    for(int a = 0; a < ACES; a++) {
+        addAceAnim(board, a, cards, count);
+    }
+    for(int s = 0; s < STACKS; s++) {
         CardStack *stack = &board->stacks[s];
+        if(stack->moving > 0) {
+            stack->progression += 16;
+            if(stack->progression == 0) {
+                stack->moving = 0;
+            }
+        }
         if(IS_SELECTED(board->hovered, s, TYPE_STACK) && stack->card_count > 0) {
             board->highlighted = *count + board->stack_row;
         }
         float x = STACK_X(s);
-        float y = STACK_Y(stack->card_count + stack->upside_down);
+        float y = STACK_Y(stack->card_count + stack->upside_down - stack->moving);
         addStack(board, stack, x, y, cards, count);
     }
     for(int a = 0; a < ACES; a++) {
         AceStack *stack = &board->aces[a];
+        if(stack->progression < 255) {
+            stack->progression += 16;
+            if(stack->progression == 0) {
+                stack->progression = 255;
+            }
+        }
         if(IS_SELECTED(board->hovered, a, TYPE_ACE)) {
             board->highlighted = *count;
         }
-        if(stack->count == 0) {
+        uint8_t top = stack->count - (stack->progression < 255);
+        if(top == 0) {
             addCardData(cards, count, 64, ACE_X(a), ACE_Y);
         } else {
-            addCardData(cards, count, stack->count - 1 + stack->suit * 13, ACE_X(a), ACE_Y);
+            addCardData(cards, count, top - 1 + stack->suit * 13, ACE_X(a), ACE_Y);
         }
     }
     DrawStack *draw = &board->draw;
@@ -321,20 +396,6 @@ void checkHovered(Board *board) {
     }
 }
 
-void progressAnim(Board *board, uint8_t a, float progression) {
-    CardAnim *anim = &board->anims[a];
-    anim->percent += progression;
-    if(anim->percent >= 1) {
-        
-    }
-}
-
-void updateAnims(Board *board, float progression) {
-    for(uint8_t a = 0; a < board->active_anims; a++) {
-        progressAnim(board, (a + board->anim_start) % MAX_ANIMS, progression);
-    }
-}
-
 void resetBoard(Board *board) {
     srand(time(NULL));
     for(int c = 0; c < CARD_TYPES; c++) {
@@ -344,13 +405,16 @@ void resetBoard(Board *board) {
     for(int s = 0; s < STACKS; s++) {
         board->stacks[s].upside_down = s;
         board->stacks[s].card_count = 0;
+        board->stacks[s].moving = 0;
         newCard(&board->stacks[s], board);
     }
     for(int a = 0; a < ACES; a++) {
         board->aces[a].count = 0;
+        board->aces[a].progression = 255;
     }
-    board->hand.card_count = 0;
     board->hand.upside_down = 0;
+    board->hand.card_count = 0;
+    board->hand.moving = 0;
     board->highlighted = UNSELECTED;
     board->return_to = UNSELECTED;
     board->hovered = UNSELECTED;
@@ -361,6 +425,4 @@ void resetBoard(Board *board) {
     for(int d = 0; d < DRAW_CARDS; d++) {
         board->draw.pile[d] = getCard(board);
     }
-    board->active_anims=0;
-    board->anim_start=0;
 }
