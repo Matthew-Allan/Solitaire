@@ -5,7 +5,7 @@ SRC := src
 OUT := out
 BUILD := build
 
-PROG_VER := 0.2.0
+PROG_VER := 0.3.0
 BUNDLE_VER := 1
 BUNDLE_ID := com.suityourselfgames.$(PROG_NAME_LC)
 
