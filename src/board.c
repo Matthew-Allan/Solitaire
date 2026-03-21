@@ -45,6 +45,7 @@ void unpick(DrawStack *stack) {
 }
 
 void flip(DrawStack *stack) {
+    stack->flip = 0;
     if(stack->from == stack->size) {
         stack->size = stack->revealed;
         stack->revealed = 0;
@@ -309,6 +310,7 @@ void updateAnims(Board *board) {
         updateProgression(&board->aces[a].progression, ANIM_SPEED);
     }
     updateProgression(&board->draw.progression, ANIM_SPEED);
+    updateProgression(&board->draw.flip, ANIM_SPEED);
 }
 
 void updateCards(Board *board, Card *cards, uint8_t *count) {
@@ -354,9 +356,6 @@ void updateCards(Board *board, Card *cards, uint8_t *count) {
             addCardData(cards, count, top - 1 + stack->suit * 13, ACE_X(a), ACE_Y);
         }
     }
-    if(draw->from != draw->size) {
-        addCardData(cards, count, FLIPPED_CARD, FLIP_X, FLIP_Y);
-    }
 
     if(IS_SELECTED(board->hovered, 0, TYPE_DRAW)) {
         board->highlighted = *count;
@@ -372,8 +371,13 @@ void updateCards(Board *board, Card *cards, uint8_t *count) {
         addCardData(cards, count, draw->pile[draw_from - 1], DRAW_X(d - 1, draw->revealed), DRAW_Y);
     } else {
         for(; draw_from > 0 && d < DRAW_SHOWN; d++, draw_from--) {
-            addCardData(cards, count, draw->pile[draw_from - 1], DRAW_X(d, draw->revealed), DRAW_Y);
+            float s_x = FLIP_X, e_x = DRAW_X(d, draw->revealed), x;
+            animateSingle(draw->flip, s_x, e_x, &x);
+            addCardData(cards, count, FLIP_CARD(draw->pile[draw_from - 1], draw->flip), x, DRAW_Y);
         }
+    }
+    if(draw->from != draw->size) {
+        addCardData(cards, count, FLIPPED_CARD, FLIP_X, FLIP_Y);
     }
 }
 
@@ -432,6 +436,14 @@ void checkHovered(Board *board) {
     }
 }
 
+void resetStack(CardStack *stack, uint8_t upside_down) {
+    stack->upside_down = upside_down;
+    stack->card_count = 0;
+    stack->moving = 0;
+    stack->progression = 255;
+    stack->flip = 255;
+}
+
 void resetBoard(Board *board) {
     srand(time(NULL));
     for(int c = 0; c < CARD_TYPES; c++) {
@@ -439,22 +451,14 @@ void resetBoard(Board *board) {
     }
     board->cards_left = CARD_TYPES;
     for(int s = 0; s < STACKS; s++) {
-        board->stacks[s].upside_down = s;
-        board->stacks[s].card_count = 0;
-        board->stacks[s].moving = 0;
-        board->stacks[s].progression = 255;
-        board->stacks[s].flip = 255;
+        resetStack(&board->stacks[s], s);
         newCard(&board->stacks[s], board);
     }
     for(int a = 0; a < ACES; a++) {
         board->aces[a].count = 0;
         board->aces[a].progression = 255;
     }
-    board->hand.upside_down = 0;
-    board->hand.card_count = 0;
-    board->hand.moving = 0;
-    board->hand.flip = 255;
-    board->hand.progression = 255;
+    resetStack(&board->hand, 0);
     board->highlighted = UNSELECTED;
     board->return_to = UNSELECTED;
     board->hovered = UNSELECTED;
@@ -462,6 +466,7 @@ void resetBoard(Board *board) {
     board->draw.from = 0;
     board->draw.revealed = 0;
     board->draw.progression = 255;
+    board->draw.flip = 255;
     board->draw.size = DRAW_CARDS;
     for(int d = 0; d < DRAW_CARDS; d++) {
         board->draw.pile[d] = getCard(board);
