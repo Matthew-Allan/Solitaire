@@ -12,8 +12,10 @@ flat out int card;
 flat out int is_selected;
 
 void main() {
+    float inv_squash = abs(float(v_card >> 8) - 127.5) / 127.5;
+    vec2 pos = vec2(v_pos.x * inv_squash, v_pos.y);
     uv = v_uv;
     card = v_card;
     is_selected = int(selected == gl_InstanceID);
-    gl_Position = camera * vec4((v_pos + v_card_pos), float(gl_InstanceID) / 255, 1.0);
+    gl_Position = camera * vec4((pos + v_card_pos), float(gl_InstanceID) / 255, 1.0);
 }

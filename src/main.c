@@ -48,7 +48,7 @@ int pollEvents(Program *program, Board *board, Camera *cam) {
 }
 
 int cardVAO(VertexArrObj *card_vao) {
-    boxVAO_2D(card_vao, CARD_W, CARD_H, 0, 0, CARD_PIXEL_H, CARD_PIXEL_W);
+    boxVAO_2D(card_vao, CARD_W, CARD_H, -CARD_H / 2, -CARD_W / 2, CARD_PIXEL_H, CARD_PIXEL_W);
     glGenBuffers(1, &card_vao->vbo);
     glBindVertexArray(card_vao->id);
 

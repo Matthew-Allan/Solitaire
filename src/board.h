@@ -40,7 +40,8 @@
 #define TYPE(field) ((field) & 0xC0)
 #define INDEX(field) ((field) & 0x3F)
 
-#define HAND TYPE_STACK | STACKS
+#define FLIP_CARD(card, prog) (((255 - (uint8_t)(prog)) << 8) | (uint8_t)(card))
+#define FLIPPED_CARD FLIP_CARD(0, 0)
 
 #define IS_TYPE(field, type) (TYPE(field) == (type))
 #define IS_INDEX(field, index) (INDEX(field) == (index))
@@ -60,6 +61,7 @@ typedef struct CardStack {
     uint8_t card_count;
     uint8_t moving;
     uint8_t progression;
+    uint8_t flip;
     card cards[MAX_CARD_STACK];
 } CardStack;
 

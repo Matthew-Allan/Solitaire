@@ -79,11 +79,12 @@ void back() {
 }
 
 void main() {
-    if(card >= 64) {
+    if((card >> 8) >= 128) {
         back();
         return;
     }
-    int suit = card / 13, value = card % 13;
+    int card_val = card & 0xFF;
+    int suit = card_val / 13, value = card_val % 13;
     int row  = value / 7, coll  = value % 7;
     
     uvec4 vals = texelFetch(atlas, ivec2(uv), 0);
