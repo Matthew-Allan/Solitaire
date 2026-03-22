@@ -33,6 +33,9 @@
 #define IN_BOX(x, y, b_x, b_y, b_w, b_h) (x >= (b_x) && x < (b_x) + (b_w) && y >= (b_y) && y < (b_y) + (b_h))
 
 int pick(DrawStack *stack) {
+    stack->pick = 0;
+    stack->flip = 255;
+    stack->progression = 255;
     if(stack->revealed == 0) {
         return -1;
     }
@@ -46,6 +49,7 @@ void unpick(DrawStack *stack) {
 
 void flip(DrawStack *stack) {
     stack->flip = 0;
+    stack->pick = 255;
     stack->progression = 255;
     stack->recent_flip = 0;
     if(stack->from == stack->size) {
@@ -315,6 +319,7 @@ void updateAnims(Board *board) {
         updateProgression(&board->aces[a].progression, ANIM_SPEED);
     }
     updateProgression(&board->draw.progression, ANIM_SPEED);
+    updateProgression(&board->draw.pick, ANIM_SPEED);
     updateProgression(&board->draw.flip, ANIM_SPEED);
     if(board->draw.flip == 255) {
         board->draw.recent_flip = 0;
@@ -378,11 +383,17 @@ void updateCards(Board *board, Card *cards, uint8_t *count) {
         }
         addCardData(cards, count, draw->pile[draw_from - 1], DRAW_X(d - 1, draw->revealed), DRAW_Y);
     } else if(draw->revealed == 0 && draw->flip < 255) {
-        draw_from = draw->size;
-        for(; draw_from > 0 && d < DRAW_SHOWN; d++, draw_from--) {
-            float e_x = FLIP_X, s_x = DRAW_X(d, draw->size), x;
+        uint8_t end = draw->size;
+        for(; end > 0 && d < DRAW_SHOWN; d++, end--) {
+            float s_x = DRAW_X(d, draw->size), e_x = FLIP_X, x;
             animateSingle(draw->flip, s_x, e_x, &x);
-            addCardData(cards, count, FLIP_CARD(draw->pile[draw_from - 1], 255 - draw->flip), x, DRAW_Y);
+            addCardData(cards, count, FLIP_CARD(draw->pile[end - 1], 255 - draw->flip), x, DRAW_Y);
+        }
+    } else if(draw->pick < 255 && draw_from >= DRAW_SHOWN) {
+        for(; draw_from > 0 && d < DRAW_SHOWN; d++, draw_from--) {
+            float s_x = DRAW_X(d + 1 < DRAW_SHOWN ? d + 1 : d, draw->revealed), e_x = DRAW_X(d, draw->revealed), x;
+            animateSingle(draw->pick, s_x, e_x, &x);
+            addCardData(cards, count, draw->pile[draw_from - 1], x, DRAW_Y);
         }
     } else {
         for(; draw_from > 0 && d < draw->recent_flip; d++, draw_from--) {
@@ -391,7 +402,7 @@ void updateCards(Board *board, Card *cards, uint8_t *count) {
             addCardData(cards, count, FLIP_CARD(draw->pile[draw_from - 1], draw->flip), x, DRAW_Y);
         }
         for(; draw_from > 0 && d < DRAW_SHOWN + draw->recent_flip; d++, draw_from--) {
-            float e_x = d >= DRAW_SHOWN ? DRAW_X(0, 1) : DRAW_X(d, draw->revealed), s_x = DRAW_X(d - draw->recent_flip, draw->revealed - draw->recent_flip), x;
+            float s_x = DRAW_X(d - draw->recent_flip, draw->revealed - draw->recent_flip), e_x = d >= DRAW_SHOWN ? DRAW_X(0, 1) : DRAW_X(d, draw->revealed), x;
             animateSingle(draw->flip, s_x, e_x, &x);
             addCardData(cards, count, draw->pile[draw_from - 1], x, DRAW_Y);
         }
@@ -486,6 +497,7 @@ void resetBoard(Board *board) {
     board->draw.from = 0;
     board->draw.revealed = 0;
     board->draw.progression = 255;
+    board->draw.pick = 255;
     board->draw.flip = 255;
     board->draw.size = DRAW_CARDS;
     for(int d = 0; d < DRAW_CARDS; d++) {

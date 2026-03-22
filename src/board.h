@@ -76,6 +76,7 @@ typedef struct DrawStack {
     uint8_t revealed;
     uint8_t size;
     uint8_t flip;
+    uint8_t pick;
     uint8_t recent_flip;
     uint8_t progression;
     card pile[DRAW_CARDS];
