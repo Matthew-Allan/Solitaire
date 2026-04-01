@@ -5,7 +5,7 @@
 #include <seng/textures.h>
 #include <seng/quaternion.h>
 
-#include "board.h"
+#include "solitaire.h"
 #include "cardshader.h"
 
 int pollEvents(Program *program, Board *board, Camera *cam) {

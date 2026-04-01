@@ -27,8 +27,38 @@
 #define STACK_CARDS ((STACKS * (STACKS + 1)) / 2)
 #define DRAW_CARDS (CARD_TYPES - STACK_CARDS)
 
+#if STACK_CARDS>CARD_TYPES
+#error Not enough cards for there to be so many stacks
+#endif
+
 #define CARD_W ((float) CARD_PIXEL_W / CARD_PIXEL_H)
 #define CARD_H 1.f
+
+#define TOP_MARGIN (DISPLAY_HEIGHT - CARD_H - MARGIN)
+
+#define ROWS_PER_CARD (1.f / STACK_OFF - 1)
+
+#define COL_X(row) (MARGIN + COL_OFF * (row))
+
+#define ACE_X(ace) COL_X(STACKS - ACES + ace)
+#define ACE_Y TOP_MARGIN
+#define ACE_W CARD_W
+#define ACE_H CARD_H
+
+#define STACK_X(stack) COL_X(stack)
+#define STACK_Y(size) ((ACE_Y - ACE_H - MARGIN) - STACK_OFF * ((size) - 1))
+#define STACK_W CARD_W
+#define STACK_H(size) (CARD_H + STACK_OFF * ((size) - 1))
+
+#define FLIP_X COL_X(0)
+#define FLIP_Y TOP_MARGIN
+#define FLIP_W CARD_W
+#define FLIP_H CARD_H
+
+#define DRAW_X(card, revealed) (COL_X(1) + DRAW_OFF * (((revealed) > DRAW_SHOWN ? DRAW_SHOWN : (revealed)) - (card) - 1))
+#define DRAW_Y TOP_MARGIN
+#define DRAW_W CARD_W
+#define DRAW_H CARD_H
 
 #define TYPE_NONE  0x00
 #define TYPE_STACK 0x40
@@ -46,6 +76,8 @@
 #define IS_TYPE(field, type) (TYPE(field) == (type))
 #define IS_INDEX(field, index) (INDEX(field) == (index))
 #define IS_SELECTED(field, index, type) (((index) | (type)) == (field))
+
+#define HAND (TYPE_STACK | STACKS)
 
 typedef uint8_t card;
 typedef uint8_t cardloc;
@@ -108,14 +140,5 @@ typedef struct Board {
     uint8_t cards_left;
     card order[CARD_TYPES];
 } Board;
-
-void resetBoard(Board *board);
-
-void checkHovered(Board *board);
-void updateCards(Board *board, Card *cards, uint8_t *count);
-void updateAnims(Board *board);
-
-void pickUp(Board *board);
-void putDown(Board *board);
 
 #endif
