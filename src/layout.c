@@ -14,14 +14,14 @@ void addCardData(Card *cards, uint8_t *count, int card, float x, float y) {
 }
 
 void updateProgression(uint8_t *prog, uint8_t delta) {
-    *prog = delta > 255 - *prog ? 255 : *prog + delta;
+    *prog = delta > ANIM_END - *prog ? ANIM_END : *prog + delta;
 }
 
 void updateAnims(Board *board) {
     for(int s = 0; s < STACKS; s++) {
         updateProgression(&board->stacks[s].progression, ANIM_SPEED);
         updateProgression(&board->stacks[s].flip, ANIM_SPEED);
-        if(board->stacks[s].progression == 255) {
+        if(board->stacks[s].progression == ANIM_END) {
             board->stacks[s].moving = 0;
         }
     }
@@ -31,7 +31,7 @@ void updateAnims(Board *board) {
     updateProgression(&board->draw.progression, ANIM_SPEED);
     updateProgression(&board->draw.pick, ANIM_SPEED);
     updateProgression(&board->draw.flip, ANIM_SPEED);
-    if(board->draw.flip == 255) {
+    if(board->draw.flip == ANIM_END) {
         board->draw.recent_flip = 0;
     }
 }
@@ -50,12 +50,12 @@ void animate(uint8_t p, CardAnim *anim, float e_x, float e_y, float *x, float *y
 
 void updateDrawCards(Board *board, Card *cards, uint8_t *count) {
     DrawStack *draw = &board->draw;
-    uint8_t draw_from = draw->revealed - (draw->progression < 255);
+    uint8_t draw_from = draw->revealed - (draw->progression < ANIM_END);
     if(IS_SELECTED(board->hovered, 0, TYPE_DRAW)) {
         board->highlighted = *count;
     }
 
-    int d = draw->progression < 255;
+    int d = draw->progression < ANIM_END;
     if(d && draw_from >= DRAW_SHOWN) {
         for(; d < DRAW_SHOWN; d++, draw_from--) {
             float s_x = DRAW_X(d - 1, draw->revealed), e_x = DRAW_X(d, draw->revealed), x;
@@ -63,20 +63,20 @@ void updateDrawCards(Board *board, Card *cards, uint8_t *count) {
             addCardData(cards, count, draw->pile[draw_from - 1], x, DRAW_Y);
         }
         addCardData(cards, count, draw->pile[draw_from - 1], DRAW_X(d - 1, draw->revealed), DRAW_Y);
-    } else if(draw->revealed == 0 && draw->flip < 255) {
+    } else if(draw->revealed == 0 && draw->flip < ANIM_END) {
         uint8_t end = draw->size;
         for(; end > 0 && d < DRAW_SHOWN; d++, end--) {
             float s_x = DRAW_X(d, draw->size), e_x = FLIP_X, x;
             animateSingle(draw->flip, s_x, e_x, &x);
-            addCardData(cards, count, FLIP_CARD(draw->pile[end - 1], 255 - draw->flip), x, DRAW_Y);
+            addCardData(cards, count, FLIP_CARD(draw->pile[end - 1], ANIM_END - draw->flip), x, DRAW_Y);
         }
-    } else if(draw->pick < 255 && draw_from >= DRAW_SHOWN) {
+    } else if(draw->pick < ANIM_END && draw_from >= DRAW_SHOWN) {
         for(; draw_from > 0 && d < DRAW_SHOWN; d++, draw_from--) {
             float s_x = DRAW_X(d + 1 < DRAW_SHOWN ? d + 1 : d, draw->revealed), e_x = DRAW_X(d, draw->revealed), x;
             animateSingle(draw->pick, s_x, e_x, &x);
             addCardData(cards, count, draw->pile[draw_from - 1], x, DRAW_Y);
         }
-    } else if(draw->flip < 255) {
+    } else if(draw->flip < ANIM_END) {
         for(; draw_from > 0 && d < draw->recent_flip; d++, draw_from--) {
             float s_x = FLIP_X, e_x = DRAW_X(d, draw->revealed), x;
             animateSingle(draw->flip, s_x, e_x, &x);
@@ -92,7 +92,7 @@ void updateDrawCards(Board *board, Card *cards, uint8_t *count) {
             addCardData(cards, count, draw->pile[draw_from - 1], DRAW_X(d, draw->revealed), DRAW_Y);
         }
     }
-    if(draw->from != draw->size && !(draw->revealed == 0 && draw->flip < 255)) {
+    if(draw->from != draw->size && !(draw->revealed == 0 && draw->flip < ANIM_END)) {
         addCardData(cards, count, FLIPPED_CARD, FLIP_X, FLIP_Y);
     }
 }
@@ -103,7 +103,7 @@ void updateAceCards(Board *board, Card *cards, uint8_t *count) {
         if(IS_SELECTED(board->hovered, a, TYPE_ACE)) {
             board->highlighted = *count;
         }
-        uint8_t top = stack->count - (stack->progression < 255);
+        uint8_t top = stack->count - (stack->progression < ANIM_END);
         if(top == 0) {
             addCardData(cards, count, FLIPPED_CARD, ACE_X(a), ACE_Y);
         } else {
@@ -136,7 +136,7 @@ void updateStackCards(Board *board, Card *cards, uint8_t *count) {
 void addAceAnim(Board *board, Card *cards, uint8_t *count) {
     for(int stack = 0; stack < ACES; stack++) {
         AceStack *ace = &board->aces[stack];
-        if(ace->progression == 255) {
+        if(ace->progression == ANIM_END) {
             continue;;
         }
         CardAnim *anim = &board->ace_anims[stack];
@@ -165,7 +165,7 @@ void addStackAnim(Board *board, Card *cards, uint8_t *count) {
 
 void addDrawAnim(Board *board, Card *cards, uint8_t *count) {
     DrawStack *draw = &board->draw;
-    if(draw->progression == 255) {
+    if(draw->progression == ANIM_END) {
         return;
     }
     float x, y;

@@ -65,13 +65,16 @@
 #define TYPE_ACE   0x80
 #define TYPE_DRAW  0xC0
 
+#define ANIM_END 255
+#define ANIM_START 0
+
 #define UNSELECTED TYPE_NONE
 
 #define TYPE(field) ((field) & 0xC0)
 #define INDEX(field) ((field) & 0x3F)
 
-#define FLIP_CARD(card, prog) (((255 - (uint8_t)(prog)) << 8) | (uint8_t)(card))
-#define FLIPPED_CARD FLIP_CARD(0, 0)
+#define FLIP_CARD(card, prog) (((ANIM_END - (uint8_t)(prog)) << 8) | (uint8_t)(card))
+#define FLIPPED_CARD FLIP_CARD(0, ANIM_START)
 
 #define IS_TYPE(field, type) (TYPE(field) == (type))
 #define IS_INDEX(field, index) (INDEX(field) == (index))
